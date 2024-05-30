@@ -1,0 +1,115 @@
+(define take
+  (lambda (lst x)
+    (if (empty? lst)
+        lst
+        (if (= x 0)
+            '()
+            (cons (car lst) (take (cdr lst) (- x 1)))))))
+
+(define take-map
+  (lambda (lst f x)
+    (if (or (empty? lst) (= x 0))
+        '()
+        (cons (f (car lst)) (take-map (cdr lst) f (- x 1))))))
+
+(define take-filter
+  (lambda (lst pred x)
+    (if (or (empty? lst) (= x 0))
+        '()
+        (if (pred (car lst))
+            (cons (car lst) (take-filter (cdr lst) pred (- x 1)))
+            (take-filter (cdr lst) pred x))))) 
+
+(define sub-size
+  (lambda (lst size)
+    (if (< size 1)
+        '(())
+        (if (or (= size (length lst)) (< size (length lst))) 
+            (cons (take lst size) (sub-size (cdr lst) size))
+            '()))))
+
+(define sub-size-map
+  (lambda (lst f size)
+    (if (< size 1)
+        '(())
+        (if (or (= size (length lst)) (< size (length lst)))
+            (cons (take-map lst f size) (sub-size-map (cdr lst) f size))
+            '()))))
+
+(define atom?
+  (lambda (x)
+    (and (not (pair? x)) (not (empty? x)))))
+   
+     
+(define root
+(lambda (tree)
+  (car tree)))
+
+(define left 
+(lambda (tree)
+  (if (empty? tree)
+      '()
+      (car (cdr tree)))))
+
+(define right 
+(lambda (tree)
+  (if (empty? tree)
+      '()
+      (car (cdr (cdr tree))))))
+
+(define count-node 
+(lambda (tree val)
+    (if (empty? tree)
+        0
+        (if (atom? tree) 
+            (if (eq? tree val)
+             1
+             0) 
+         (+ (count-node (left tree) val)
+            (count-node (right tree) val)
+            (if (eq? (root tree) val) 1 0))))))
+
+(define mirror-tree 
+(lambda (tree)
+  (if (empty? tree)
+      '()
+      (if (atom? tree) tree
+         (cons (root tree)
+                      (cons (mirror-tree (right tree))
+                            (cons (mirror-tree (left tree)) '())))))))
+(define make-ok
+  (lambda (val)
+    (cons 'Ok val)))
+
+(define make-error
+  (lambda (message)
+    (cons 'Error message)))
+
+(define ok?
+(lambda (x)
+  (if (pair? x)
+      (eq? (car x) 'Ok)
+      #f)))
+
+(define error?
+(lambda (x)
+  (if (pair? x)
+      (eq? (car x) 'Error)
+      #f)))
+
+(define result?
+(lambda (x)
+  (and (pair? x) (or (ok? x) (error? x)))))
+
+(define result->val
+    (lambda (x)
+  (if  (result? x) 
+        (cdr x)
+        (make-error "Error: not a result"))))
+
+(define bind
+  (lambda (f)
+    (lambda (res)
+      (if (ok? res) (f (result->val res))
+            (if (error? res) (make-error (result->val res))
+            (make-error "Error: not a result"))))))
